@@ -1,0 +1,71 @@
+// (shift control c)
+#import 'clipboard.js'
+
+var minLeft = 0;
+var minTop = 0;
+var maxWidth = 0;
+var maxHeight = 0;
+
+
+log(selection.length())
+
+if ( selection.length() > 1)
+{
+	for(var i=0; i< selection.length(); i++)
+	{
+		
+		if(i+1 < selection.length())
+		{
+			//check for smallest X
+			if(selection[i].frame().left()<=selection[i+1].frame().left())
+			{
+				minLeft = selection[i].frame().left()
+			}
+			else
+			{
+				minLeft = selection[i+1].frame().left()
+			}
+			//check for smallest Y
+			if(selection[i].frame().top()<=selection[i+1].frame().top())
+			{
+				minTop = selection[i].frame().top()
+			}
+			else
+			{
+				minTop = selection[i+1].frame().top()
+			}
+			//check for biggest width-position value
+			if(selection[i].frame().maxX()>=selection[i+1].frame().maxX())
+			{
+				maxWidth = selection[i].frame().maxX()
+			}
+			else
+			{
+				maxWidth = selection[i+1].frame().maxX()
+			}
+			//check for biggest height-position value
+			if(selection[i].frame().maxY()>=selection[i+1].frame().maxY())
+			{
+				maxHeight = selection[i].frame().maxY()
+			}
+			else
+			{
+				maxHeight = selection[i+1].frame().maxY()
+			}
+		}
+		
+	}
+	
+}
+// if there is only one object in the selection:
+if ( selection.length() == 1)
+{	
+	minLeft = selection[0].frame().left()
+	minTop = selection[0].frame().top()
+	maxWidth = selection[0].frame().maxX()
+	maxHeight = selection[0].frame().maxY()
+	
+}
+
+var container = [minLeft,minTop,maxWidth,maxHeight]
+clipboard.set(container.toString());

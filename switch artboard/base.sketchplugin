@@ -1,0 +1,294 @@
+
+// Moves view to be centered on next artboard in layer list, top to bottom 
+
+
+// GLOBALS
+
+var current_ab;
+var sortvalue;
+
+var all_abs = [[doc currentPage] artboards];
+
+var ab_count = [all_abs count] - 1;
+var go_next = true; // if true then go next;
+var x_precedence = true;
+var tolerance = 100; 
+
+//abs ordered by position
+var abs = [];
+
+
+function init(bol1,bol2)
+{
+	// set globals
+	go_next = bol1;
+	x_precedence = bol2;
+	abs =  set_order(all_abs);
+	
+	if(!(selection && [selection count]) || (selection.count()==0)) 
+	{
+		// if there's no selection, just set the next one to the first (remember that array is "backwards" == bottom to top)
+		next_ab = all_abs[ab_count];
+		next_ab.setIsSelected(1);
+	} 
+	else 
+	{
+		
+		// if there *is* a selection, then make sure it's ab artboard and find the next/previous
+		current_ab = get_an_artboard(selection);	
+
+		if (!go_next) 
+		{
+
+			var next_ab = get_previous_ab();
+		} 
+		else 
+		{
+			var next_ab = get_next_ab();
+		}
+		current_ab.setIsSelected(0);
+		next_ab.setIsSelected(1);
+	}
+	// in most cases an artboard is less wide than the current view, therefor we check for height and take the zoomValue in consideration
+	// the following conditions check if the viewport is zoomed and appliess a temporary rect in order to see the top of an artboard
+	if([doc zoomValue]*next_ab.frame().height() >= [doc currentView].frame().size.height && [doc zoomValue]*next_ab.frame().width() <= [doc currentView].frame().size.width)
+	{
+		var new_layer = [next_ab addLayerOfType:"rectangle"]
+		new_layer.frame().width = next_ab.frame().width()
+		 // if the zoomLevel is eg. 0.5% the newLayer needs to be 2times as big as the current Viewport thats why we divide it through the zoomvalue
+		 //additionally I give a little spacing on top otherwise the artboard sticks too close to the viewport
+		new_layer.frame().height = ([doc currentView].frame().size.height/[doc zoomValue])-(100/[doc zoomValue]);
+		// centerRect to the temporary rect
+		[[doc currentView] centerRect:[new_layer absoluteRect]];
+		//removing the temporary rect
+		[next_ab removeLayer:new_layer]
+		
+	}
+	else if([doc zoomValue]*next_ab.frame().width() >= [doc currentView].frame().size.width && [doc zoomValue]*next_ab.frame().height() <= [doc currentView].frame().size.height)
+	{
+		var new_layer = [next_ab addLayerOfType:"rectangle"]
+		new_layer.frame().height = next_ab.frame().height()
+		new_layer.frame().width = ([doc currentView].frame().size.width/[doc zoomValue])-(100/[doc zoomValue]);
+		[[doc currentView] centerRect:[new_layer absoluteRect]];
+		[next_ab removeLayer:new_layer]
+	}
+	else if([doc zoomValue]*next_ab.frame().width() >= [doc currentView].frame().size.width && [doc zoomValue]*next_ab.frame().height() >= [doc currentView].frame().size.height)
+	{
+		var new_layer = [next_ab addLayerOfType:"rectangle"]
+		new_layer.frame().width = ([doc currentView].frame().size.width/[doc zoomValue])-(100/[doc zoomValue]);
+		new_layer.frame().height = ([doc currentView].frame().size.height/[doc zoomValue])-(100/[doc zoomValue]);
+		[[doc currentView] centerRect:[new_layer absoluteRect]];
+		[next_ab removeLayer:new_layer]
+	}
+	// if arboard(zoomed or not zoomed) is not bigger than viewport we just center it normally:
+	else
+	{
+		[[doc currentView] centerRect:[next_ab absoluteRect]];
+		
+	}
+}
+
+function set_order(artboards)
+{
+	var absPositions =[];
+	
+	var xPos;
+	var yPos;
+	
+	for(var i= 0; i<=ab_count;i++)
+	{
+		var point = [];
+		xPos = artboards[i].frame().left();
+		yPos = artboards[i].frame().top();
+		point.push(xPos);
+		point.push(yPos);
+		absPositions.push(point);
+		
+	}
+	absPositions = absPositions.sort(dynamicSort(0,1));
+	return absPositions;
+
+}
+
+
+function dynamicSort(xPos,yPos)
+{
+    if(x_precedence)
+    {
+	    return function(a, b)
+	    {
+        	if (a[yPos] == b[yPos])
+			{
+        		sortvalue = a[xPos] - b[xPos];
+				return sortvalue;
+			}
+			// incorporating tolerance if a artboard is slightly in offset
+			else if (b[yPos]<a[yPos]+tolerance && b[yPos]+tolerance>a[yPos])
+			{
+				sortvalue =  a[xPos] - b[xPos];
+				return sortvalue;
+			}
+			
+			else
+			{
+        		sortvalue = a[yPos] - b[yPos];
+				return sortvalue;
+			}  
+		}
+	}
+    else
+    {
+	    return function(a, b)
+	    {
+        	if (a[xPos] == b[xPos])
+			{
+        		sortvalue = a[yPos] - b[yPos];
+				return sortvalue;
+			}
+			//incorporating tolerance if a artboard is slightly in offset
+			else if (b[xPos]<a[xPos]+tolerance && b[xPos]+tolerance>a[xPos])
+			{
+				sortvalue =  a[yPos] - b[yPos];
+				return sortvalue;
+			}
+			else
+			{
+        		sortvalue = a[xPos] - b[xPos];
+				return sortvalue;
+			} 
+		}
+	}
+}
+
+
+function get_an_artboard(selection)
+{
+	// if there is a selection; make sure it's an artboard and, if not bump up to its artboard
+	current_ab = selection[0];
+	var current_class = [current_ab class];
+	while(current_ab && ([current_ab class] !== MSArtboardGroup))
+	{
+		current_ab.setIsSelected(0);
+		current_ab = [current_ab parentGroup];
+	}
+	current_ab.setIsSelected(1);
+	return current_ab;
+}
+
+
+function get_next_ab() 
+{
+	var currentMatchingIndex = get_matching_index();
+	var nextMatchingIndex = get_next_matching_index(currentMatchingIndex);
+	return all_abs[nextMatchingIndex];
+}
+
+
+function get_previous_ab() 
+{
+	
+	var currentMatchingIndex = get_matching_index();
+	var previousMatchingIndex = get_previous_matching_index(currentMatchingIndex);
+	return all_abs[previousMatchingIndex];
+	
+}
+
+
+function get_matching_index()
+{
+	//type checkker
+	//var myclass = {}.toString.apply(abs[0][0]);
+	//log(myclass);
+	
+	for(var i=0; i<= ab_count;i++)
+	{
+		
+		if(abs[i][0] == current_ab.frame().left() && abs[i][1] == current_ab.frame().top())
+		{
+			return i;
+		}
+	}
+}
+
+
+function get_next_matching_index(currentMatchingIndex)
+{
+	
+	for(var i=0; i<= ab_count;i++)
+	{
+			if(currentMatchingIndex+1 <= ab_count)
+			{
+				if(abs[currentMatchingIndex+1][0] == all_abs[i].frame().left() && abs[currentMatchingIndex+1][1] == all_abs[i].frame().top())
+				{
+				
+						return i;
+			
+				}
+			}
+			else
+			{
+				if(abs[ab_count][0] == all_abs[i].frame().left() && abs[ab_count][1] == all_abs[i].frame().top())
+				{
+				return i;
+				}
+				//return get_first_matching_index();
+			}
+	}
+	
+}
+
+
+function get_previous_matching_index(currentMatchingIndex)
+{
+	
+	for(var i=0; i<= ab_count;i++)
+	{
+			if(currentMatchingIndex-1 >= 0)
+			{
+				if(abs[currentMatchingIndex-1][0] == all_abs[i].frame().left() && abs[currentMatchingIndex-1][1] == all_abs[i].frame().top())
+				{
+					return i;
+				}
+			}
+			else
+			{
+				if(abs[0][0] == all_abs[i].frame().left() && abs[0][1] == all_abs[i].frame().top())
+				{
+					return i;
+				}
+				//return get_last_matching_index();
+			}
+	}
+
+}
+
+/*
+function get_first_matching_index()
+{
+	for(var i=0; i<= ab_count;i++)
+	{
+		
+		if(abs[0][0] == all_abs[i].frame().left() && abs[0][1] == all_abs[i].frame().top())
+		{
+			return i;
+		}
+	}
+}
+function get_last_matching_index()
+{
+	for(var i=0; i<= ab_count;i++)
+	{
+		
+		if(abs[ab_count][0] == all_abs[i].frame().left() && abs[ab_count][1] == all_abs[i].frame().top())
+		{
+			return i;
+		}
+	}
+}
+
+*/
+
+
+
+
+

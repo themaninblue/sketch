@@ -1,0 +1,18 @@
+// (shift control h)
+#import 'clipboard.js'
+
+var cPosString = clipboard.get()
+var cPos = cPosString.split(",")
+var top = cPos[1];
+var bottom = cPos[3];
+var height = bottom-top; 
+
+if ( selection.length() >= 1)
+{
+	for(var i=0; i<selection.length();i++)
+	{
+		selection[i].frame().height = height
+	}
+}
+	
+	

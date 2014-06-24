@@ -1,0 +1,6 @@
+// (control shift ↓)
+// Moves view to be centered on next artboard in layer list, top to bottom 
+
+#import 'base.sketchplugin'
+//2 booleans, the first tells if you go to the next, the second is x_precedence
+init(true,false);

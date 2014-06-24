@@ -1,0 +1,22 @@
+// (shift control s)
+#import 'clipboard.js'
+
+var cPosString = clipboard.get()
+var cPos = cPosString.split(",")
+var x = cPos[0];
+var maxX = cPos[2];
+var width = maxX-x;
+var top = cPos[1];
+var bottom = cPos[3];
+var height = bottom-top; 
+
+if ( selection.length() >= 1)
+{
+	for(var i=0; i<selection.length();i++)
+	{
+		selection[i].frame().width = width
+		selection[i].frame().height = height
+	}
+}
+	
+	

@@ -1,0 +1,16 @@
+// (shift control x)
+#import 'clipboard.js'
+
+var cPosString = clipboard.get()
+var cPos = cPosString.split(",")
+var x = cPos[0];
+
+if ( selection.length() >= 1)
+{
+	for(var i=0; i<selection.length();i++)
+	{
+		selection[i].frame().x = x
+	}
+}
+	
+	
