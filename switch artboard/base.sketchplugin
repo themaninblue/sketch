@@ -262,32 +262,6 @@ function get_previous_matching_index(currentMatchingIndex)
 
 }
 
-/*
-function get_first_matching_index()
-{
-	for(var i=0; i<= ab_count;i++)
-	{
-		
-		if(abs[0][0] == all_abs[i].frame().left() && abs[0][1] == all_abs[i].frame().top())
-		{
-			return i;
-		}
-	}
-}
-function get_last_matching_index()
-{
-	for(var i=0; i<= ab_count;i++)
-	{
-		
-		if(abs[ab_count][0] == all_abs[i].frame().left() && abs[ab_count][1] == all_abs[i].frame().top())
-		{
-			return i;
-		}
-	}
-}
-
-*/
-
 
 
 
