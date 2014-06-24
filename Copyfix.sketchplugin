@@ -1,0 +1,17 @@
+
+
+if ( selection.count() >= 0)
+{
+	var array = selection
+	
+	[[doc currentHandler] writeLayers:array toPasteboard:[NSPasteboard generalPasteboard]];
+	
+	
+
+	
+}
+
+
+
+
+
